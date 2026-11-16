@@ -84,8 +84,10 @@ Map<String, Object>? smtcUpdateFor(PlayerSnapshot? prev, PlayerSnapshot next) {
 /// hardware media keys) and routes button presses back into
 /// [PlaybackService]. The native side lives in
 /// `windows/runner/smtc_channel.cpp` and
-/// `macos/Runner/NowPlayingChannel.swift`. Every failure degrades to
-/// silence.
+/// `macos/Runner/NowPlayingChannel.swift`. On Windows the same `update`
+/// payload also drives the taskbar thumbnail toolbar
+/// (`windows/runner/thumb_bar.cpp`); its clicks arrive as `onButton`
+/// `previous` / `toggle` / `next`. Every failure degrades to silence.
 class SmtcService {
   final Ref _ref;
   final MethodChannel _channel = const MethodChannel('lastwave/smtc');

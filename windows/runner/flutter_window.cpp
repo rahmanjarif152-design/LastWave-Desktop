@@ -13,6 +13,7 @@
 #include "utils.h"
 #include "flutter/generated_plugin_registrant.h"
 #include "smtc_channel.h"
+#include "thumb_bar.h"
 #include "wasapi_channel.h"
 
 namespace {
@@ -77,6 +78,18 @@ bool FlutterWindow::OnCreate() {
   // Best-effort: init failures degrade to silence inside the channel.
   smtc_channel_ = std::make_unique<lastwave::SmtcChannel>(
       flutter_controller_->engine()->messenger(), GetHandle());
+  // Taskbar thumbnail toolbar (prev / play-pause / next under the hover
+  // preview). Driven by the same Dart `update` payload as SMTC; clicks go
+  // back through the SMTC channel as onButton, so Dart needs no changes.
+  thumb_bar_ = std::make_unique<lastwave::ThumbBar>(
+      GetHandle(), ::GetModuleHandleW(nullptr),
+      [this](const char* button) {
+        if (smtc_channel_ && !destroying_) smtc_channel_->SendButton(button);
+      });
+  smtc_channel_->SetTransportObserver(
+      [this](const lastwave::TransportState& state) {
+        if (thumb_bar_) thumb_bar_->Update(state);
+      });
   deeplink_channel_ =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           flutter_controller_->engine()->messenger(), "lastwave/deeplink",
@@ -101,6 +114,8 @@ bool FlutterWindow::OnCreate() {
 
 void FlutterWindow::OnDestroy() {
   destroying_ = true;
+  if (smtc_channel_) smtc_channel_->SetTransportObserver(nullptr);
+  thumb_bar_.reset();
   smtc_channel_.reset();
   deeplink_channel_.reset();
   wasapi_channel_.reset();
@@ -115,6 +130,14 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  // Thumb bar first: it consumes only TaskbarButtonCreated and its own
+  // THBN_CLICKED ids; theme/DPI messages are observed and fall through.
+  if (thumb_bar_ && !destroying_) {
+    if (auto handled = thumb_bar_->HandleMessage(message, wparam, lparam)) {
+      return *handled;
+    }
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   // Never forward once destroy has begun: DestroyWindow() re-enters here
   // on the same thread while flutter_controller_ is being torn down.

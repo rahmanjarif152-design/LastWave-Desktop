@@ -13,6 +13,7 @@
 namespace lastwave {
 class WasapiChannel;
 class SmtcChannel;
+class ThumbBar;
 }
 
 // A window that does nothing but host a Flutter view.
@@ -37,6 +38,9 @@ class FlutterWindow : public Win32Window {
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
   std::unique_ptr<lastwave::WasapiChannel> wasapi_channel_;
   std::unique_ptr<lastwave::SmtcChannel> smtc_channel_;
+  // Taskbar thumbnail toolbar; declared after smtc_channel_ (it sends
+  // button presses through it).
+  std::unique_ptr<lastwave::ThumbBar> thumb_bar_;
   // lastwave:// links forwarded by a second launch (WM_COPYDATA).
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       deeplink_channel_;
