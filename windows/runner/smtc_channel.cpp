@@ -260,6 +260,7 @@ class SmtcChannel::Impl {
         // "Song - Artist"
         s.caption = Utf8ToWide(a.empty() ? t : (t.empty() ? a : t + " - " + a));
       }
+      if (s.hasTrack) s.artUrl = StringArg(*args, "artUrl");
       observer_(s);
     }
     ApplyUpdate(*args);

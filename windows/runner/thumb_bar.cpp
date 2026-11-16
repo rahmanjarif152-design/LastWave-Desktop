@@ -38,6 +38,7 @@ ThumbBar::ThumbBar(HWND hwnd, HINSTANCE instance, ButtonSink on_button)
   ::ChangeWindowMessageFilterEx(hwnd_, taskbar_created_msg_, MSGFLT_ALLOW,
                                 nullptr);
   ::ChangeWindowMessageFilterEx(hwnd_, WM_COMMAND, MSGFLT_ALLOW, nullptr);
+  art_ = std::make_unique<ArtworkThumbnail>(hwnd_);
   icons_ = LoadIconSet();
   // The button may already exist if the window was shown before we hooked
   // the message; normally the window is still hidden here.
@@ -45,6 +46,7 @@ ThumbBar::ThumbBar(HWND hwnd, HINSTANCE instance, ButtonSink on_button)
 }
 
 ThumbBar::~ThumbBar() {
+  art_.reset();
   // Buttons die with the window; just release COM and the icon handles.
   taskbar_.Reset();
   DestroyIconSet(icons_);
@@ -52,6 +54,11 @@ ThumbBar::~ThumbBar() {
 
 std::optional<LRESULT> ThumbBar::HandleMessage(UINT message, WPARAM wparam,
                                                LPARAM lparam) {
+  if (art_) {
+    if (auto handled = art_->HandleMessage(message, wparam, lparam)) {
+      return handled;
+    }
+  }
   if (taskbar_created_msg_ != 0 && message == taskbar_created_msg_) {
     OnTaskbarButtonCreated();
     return 0;
@@ -92,6 +99,7 @@ void ThumbBar::Update(const TransportState& state) {
   const bool caption_changed = state.caption != state_.caption;
   state_ = state;
   if (caption_changed) ApplyCaption();
+  if (art_) art_->SetUrl(state.artUrl);
   Apply();
 }
 

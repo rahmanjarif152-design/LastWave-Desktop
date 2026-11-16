@@ -17,11 +17,13 @@ struct TransportState {
   // "Title - Artist" of the current track, empty when nothing is loaded.
   // Shown as the taskbar thumbnail caption (the window title).
   std::wstring caption;
+  // Artwork image URL of the current track (empty when none).
+  std::string artUrl;
 
   bool operator==(const TransportState& o) const {
     return status == o.status && hasTrack == o.hasTrack &&
            canNext == o.canNext && canPrev == o.canPrev &&
-           caption == o.caption;
+           caption == o.caption && artUrl == o.artUrl;
   }
   bool operator!=(const TransportState& o) const { return !(*this == o); }
 };

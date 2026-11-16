@@ -8,6 +8,9 @@
 #include <functional>
 #include <optional>
 
+#include <memory>
+
+#include "artwork_thumbnail.h"
 #include "transport_state.h"
 
 namespace lastwave {
@@ -58,6 +61,7 @@ class ThumbBar {
   Microsoft::WRL::ComPtr<ITaskbarList3> taskbar_;
   bool added_ = false;
   IconSet icons_;
+  std::unique_ptr<ArtworkThumbnail> art_;
   TransportState state_;  // last state from Dart; replayed on re-add
 };
 
