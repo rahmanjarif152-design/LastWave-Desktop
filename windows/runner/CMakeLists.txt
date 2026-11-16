@@ -14,6 +14,7 @@ add_executable(${BINARY_NAME} WIN32
   "wasapi_engine.cpp"
   "wasapi_channel.cpp"
   "smtc_channel.cpp"
+  "thumb_bar.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "Runner.rc"
   "runner.exe.manifest"
