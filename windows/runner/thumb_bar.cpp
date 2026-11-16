@@ -89,7 +89,9 @@ std::optional<LRESULT> ThumbBar::HandleMessage(UINT message, WPARAM wparam,
 
 void ThumbBar::Update(const TransportState& state) {
   if (state == state_) return;
+  const bool caption_changed = state.caption != state_.caption;
   state_ = state;
+  if (caption_changed) ApplyCaption();
   Apply();
 }
 
@@ -173,6 +175,15 @@ void ThumbBar::FillButtons(THUMBBUTTON (&buttons)[3]) const {
   fill(buttons[1], kIdPlayPause, show_pause ? icons_.pause : icons_.play,
        show_pause ? L"Pause" : L"Play", state_.hasTrack);
   fill(buttons[2], kIdNext, icons_.next, L"Next", state_.canNext);
+}
+
+void ThumbBar::ApplyCaption() {
+  // The taskbar hover preview shows the window title above the thumbnail
+  // (Spotify does the same). The app draws its own title bar, so this is
+  // otherwise invisible. Falls back to the app name when nothing plays.
+  const wchar_t* text =
+      state_.caption.empty() ? L"LastWave" : state_.caption.c_str();
+  ::SetWindowTextW(hwnd_, text);
 }
 
 void ThumbBar::Apply() {

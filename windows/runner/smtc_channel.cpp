@@ -254,6 +254,11 @@ class SmtcChannel::Impl {
       s.hasTrack = BoolArg(*args, "hasTrack", false);
       s.canNext = BoolArg(*args, "canNext", false);
       s.canPrev = BoolArg(*args, "canPrev", false);
+      if (s.hasTrack) {
+        const std::string t = StringArg(*args, "title");
+        const std::string a = StringArg(*args, "artist");
+        s.caption = Utf8ToWide(a.empty() ? t : (t.empty() ? a : a + " - " + t));
+      }
       observer_(s);
     }
     ApplyUpdate(*args);

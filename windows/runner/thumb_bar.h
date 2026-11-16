@@ -49,6 +49,7 @@ class ThumbBar {
   static void DestroyIconSet(IconSet& set);
   void FillButtons(THUMBBUTTON (&buttons)[3]) const;
   void Apply();
+  void ApplyCaption();
 
   HWND hwnd_;
   HINSTANCE instance_;
