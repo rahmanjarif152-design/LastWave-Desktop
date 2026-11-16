@@ -5,7 +5,11 @@
 
 #include <flutter/binary_messenger.h>
 
+#include <functional>
 #include <memory>
+#include <string>
+
+#include "transport_state.h"
 
 namespace lastwave {
 
@@ -25,6 +29,14 @@ class SmtcChannel {
 
   SmtcChannel(const SmtcChannel&) = delete;
   SmtcChannel& operator=(const SmtcChannel&) = delete;
+
+  // Receives every Dart `update` payload's transport fields, even when
+  // SMTC itself failed to initialise (taskbar thumb bar keeps working).
+  void SetTransportObserver(
+      std::function<void(const TransportState&)> observer);
+  // Forwards a native transport press (e.g. a taskbar thumbnail button)
+  // to Dart as `onButton(name)` - same path as SMTC/media keys.
+  void SendButton(const std::string& name);
 
  private:
   class Impl;

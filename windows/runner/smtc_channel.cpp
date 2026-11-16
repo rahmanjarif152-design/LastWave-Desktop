@@ -17,6 +17,7 @@
 #include <flutter/standard_method_codec.h>
 
 #include <cstdint>
+#include <functional>
 #include <cwchar>
 #include <memory>
 #include <string>
@@ -133,6 +134,17 @@ class SmtcChannel::Impl {
     InitSystemMedia();
   }
 
+  void SetObserver(std::function<void(const TransportState&)> observer) {
+    observer_ = std::move(observer);
+  }
+
+  void Send(const std::string& name) {
+    if (channel_) {
+      channel_->InvokeMethod("onButton",
+                             std::make_unique<EncodableValue>(name));
+    }
+  }
+
   ~Impl() {
     if (smtc_ && token_.value != 0) {
       smtc_->remove_ButtonPressed(token_);
@@ -233,6 +245,16 @@ class SmtcChannel::Impl {
     if (args == nullptr) {
       result->Error("smtc", "missing args");
       return;
+    }
+    // Observer first: ApplyUpdate returns early when SMTC failed to init,
+    // and the taskbar thumb bar must still follow the player.
+    if (observer_) {
+      TransportState s;
+      s.status = IntArg32(*args, "status", kStatusStopped);
+      s.hasTrack = BoolArg(*args, "hasTrack", false);
+      s.canNext = BoolArg(*args, "canNext", false);
+      s.canPrev = BoolArg(*args, "canPrev", false);
+      observer_(s);
     }
     ApplyUpdate(*args);
     result->Success();
@@ -396,12 +418,20 @@ class SmtcChannel::Impl {
   ComPtr<ABI::Windows::Media::ISystemMediaTransportControls> smtc_;
   EventRegistrationToken token_{};
   std::string lastArtUrl_;
+  std::function<void(const TransportState&)> observer_;
 };
 
 SmtcChannel::SmtcChannel(flutter::BinaryMessenger* messenger, HWND hwnd)
     : impl_(std::make_unique<Impl>(messenger, hwnd)) {}
 
 SmtcChannel::~SmtcChannel() = default;
+
+void SmtcChannel::SetTransportObserver(
+    std::function<void(const TransportState&)> observer) {
+  impl_->SetObserver(std::move(observer));
+}
+
+void SmtcChannel::SendButton(const std::string& name) { impl_->Send(name); }
 
 }  // namespace lastwave
 
