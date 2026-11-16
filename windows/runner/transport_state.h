@@ -14,7 +14,7 @@ struct TransportState {
   bool hasTrack = false;
   bool canNext = false;
   bool canPrev = false;
-  // "Artist - Title" of the current track, empty when nothing is loaded.
+  // "Title - Artist" of the current track, empty when nothing is loaded.
   // Shown as the taskbar thumbnail caption (the window title).
   std::wstring caption;
 

@@ -257,7 +257,8 @@ class SmtcChannel::Impl {
       if (s.hasTrack) {
         const std::string t = StringArg(*args, "title");
         const std::string a = StringArg(*args, "artist");
-        s.caption = Utf8ToWide(a.empty() ? t : (t.empty() ? a : a + " - " + t));
+        // "Song - Artist"
+        s.caption = Utf8ToWide(a.empty() ? t : (t.empty() ? a : t + " - " + a));
       }
       observer_(s);
     }
